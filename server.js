@@ -28,7 +28,7 @@ app.use(/\/api\/.*/, (req, res) => {
 });
 
 // Serve index.html for all other routes (SPA support if needed)
-app.get('*', (req, res) => {
+app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
