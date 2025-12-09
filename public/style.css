@@ -1,0 +1,53 @@
+/* Custom Utilities & Overrides */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+
+body {
+    font-family: 'Noto Sans SC', sans-serif;
+}
+
+/* Tab Navigation Styles */
+.tab-btn {
+    @apply py-4 text-gray-500 font-medium border-b-2 border-transparent transition-all whitespace-nowrap;
+}
+
+.tab-btn:hover {
+    @apply text-purple-600;
+}
+
+.tab-btn.active {
+    @apply text-purple-700 border-purple-600;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Custom Scrollbar for preview area */
+#preview-area::-webkit-scrollbar {
+    height: 6px;
+}
+#preview-area::-webkit-scrollbar-thumb {
+    background-color: #d8b4fe;
+    border-radius: 3px;
+}
+
+/* Card Styles for Report Items */
+.report-item-card {
+    @apply bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-start gap-4 transition-shadow hover:shadow-md;
+}
+
+.report-item-icon {
+    @apply w-10 h-10 rounded-full flex items-center justify-center shrink-0;
+}
