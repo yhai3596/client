@@ -210,6 +210,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: formData
             });
             
+            // Handle non-200 responses specifically
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("Server Error:", response.status, errorText);
+                
+                let errorMessage = `服务器错误 (${response.status})`;
+                if (response.status === 504) {
+                    errorMessage = "分析超时，请减少图片数量或重试。";
+                } else if (response.status === 413) {
+                    errorMessage = "图片总大小过大，请减少图片数量。";
+                }
+                
+                throw new Error(errorMessage);
+            }
+
             const result = await response.json();
             
             clearInterval(interval);
@@ -233,8 +248,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             clearInterval(interval);
             loadingOverlay.classList.add('hidden');
-            console.error(error);
-            alert('网络请求错误，请稍后重试');
+            console.error("Fetch Error:", error);
+            alert(error.message || '网络请求错误，请稍后重试');
         }
     });
 
