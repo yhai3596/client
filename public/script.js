@@ -366,16 +366,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 logging: false,
                 backgroundColor: '#ffffff',
                 onclone: (clonedDoc) => {
-                    // Force text color to black for export
                     const clonedReport = clonedDoc.getElementById('report-section');
-                    clonedReport.style.color = '#000000';
                     
-                    // Fix opacity/transparency issues
+                    // 1. Force remove all background/text opacities
+                    // Tailwind uses --tw-text-opacity, --tw-bg-opacity variables. 
+                    // We must override them or remove classes.
+                    
+                    // Force text color to solid black (removing Tailwind opacity vars)
+                    clonedReport.style.color = 'rgb(0, 0, 0)'; 
+                    
+                    // Select ALL elements
                     const allElements = clonedReport.getElementsByTagName('*');
+                    
                     for (let el of allElements) {
                         const style = window.getComputedStyle(el);
+                        
+                        // Fix 1: Reset CSS Opacity property
                         if (style.opacity !== '1') {
                             el.style.opacity = '1';
+                        }
+                        
+                        // Fix 2: Reset Tailwind CSS Variable Opacities (Text & Background)
+                        // This is the "foggy mask" culprit
+                        el.style.setProperty('--tw-text-opacity', '1');
+                        el.style.setProperty('--tw-bg-opacity', '1');
+                        el.style.setProperty('--tw-border-opacity', '1');
+                        
+                        // Fix 3: Ensure text color is solid (if it was inherited as gray)
+                        // If the element has text content, ensure it's high contrast
+                        if (el.innerText && el.innerText.trim().length > 0 && style.color !== 'rgba(0, 0, 0, 0)') {
+                             // Optional: force darken text if it's too light
+                             // el.style.color = '#1f2937'; // gray-800
                         }
                     }
                 }
