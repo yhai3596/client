@@ -7,15 +7,28 @@ body {
 
 /* Tab Navigation Styles */
 .tab-btn {
-    @apply py-4 text-gray-500 font-medium border-b-2 border-transparent transition-all whitespace-nowrap;
+    padding: 1rem 1.5rem;
+    color: #6b7280;
+    font-weight: 500;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    position: relative;
+    background: transparent;
+    border-radius: 8px 8px 0 0;
 }
 
 .tab-btn:hover {
-    @apply text-purple-600;
+    color: #7c3aed;
+    background-color: #f3e8ff;
 }
 
 .tab-btn.active {
-    @apply text-purple-700 border-purple-600;
+    color: #ffffff;
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    border-bottom-color: #5b21b6;
+    box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.2);
+    transform: translateY(-2px);
 }
 
 /* Animations */

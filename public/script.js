@@ -141,6 +141,12 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('images', file);
         });
 
+        // Add supplementary info
+        const supplementaryInfo = document.getElementById('supplementary-info').value;
+        if (supplementaryInfo) {
+            formData.append('supplementaryInfo', supplementaryInfo);
+        }
+
         try {
             const response = await fetch('/api/analyze', {
                 method: 'POST',
@@ -240,6 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
             uploadedFiles = [];
             previewArea.innerHTML = '';
             fileInput.value = '';
+            document.getElementById('supplementary-info').value = ''; // Reset supplementary info
             updateUIState();
             
             reportSection.classList.add('hidden');
