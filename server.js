@@ -17,7 +17,17 @@ const client = new OpenAI({
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Handle 404 for API routes
+app.use('/api/*', (req, res) => {
+    res.status(404).json({ error: 'API endpoint not found' });
+});
+
+// Serve index.html for all other routes (SPA support if needed)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // File upload configuration
 const storage = multer.memoryStorage();
@@ -256,7 +266,11 @@ app.post('/api/analyze', upload.array('images', 20), async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-    console.log(`Server is running at http://localhost:${PORT}`);
-    console.log(`Ensure you have created a .env file with ARK_API_KEY and ARK_MODEL_ID`);
-});
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server is running at http://localhost:${PORT}`);
+        console.log(`Ensure you have created a .env file with ARK_API_KEY and ARK_MODEL_ID`);
+    });
+}
+
+module.exports = app;
