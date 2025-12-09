@@ -20,18 +20,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Handle 404 for API routes
-// Note: In Express 5 + path-to-regexp v8+, wildcard syntax is strict.
-// Using a regex is the safest way to match everything under /api/
-app.use(/\/api\/.*/, (req, res) => {
-    res.status(404).json({ error: 'API endpoint not found' });
-});
-
-// Serve index.html for all other routes (SPA support if needed)
-app.get(/.*/, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
 // File upload configuration
 const storage = multer.memoryStorage();
 const upload = multer({ 
@@ -289,6 +277,16 @@ app.post('/api/analyze', upload.array('images', 20), async (req, res) => {
         
         res.status(500).json({ error: `分析服务错误: ${errorMessage}` });
     }
+});
+
+// Handle 404 for API routes (Must be defined AFTER all API routes)
+app.use(/\/api\/.*/, (req, res) => {
+    res.status(404).json({ error: 'API endpoint not found' });
+});
+
+// Serve index.html for all other routes (SPA support)
+app.get(/.*/, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Start server
