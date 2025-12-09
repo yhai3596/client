@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Image Compression ---
-    function compressImage(file, maxWidth = 1024, quality = 0.7) {
+    function compressImage(file, maxWidth = 800, quality = 0.6) {
         return new Promise((resolve) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -183,9 +183,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Prepare FormData
         const formData = new FormData();
+        let totalSize = 0;
         uploadedFiles.forEach(file => {
             formData.append('images', file);
+            totalSize += file.size;
         });
+        
+        // Vercel Serverless Function Payload Limit is 4.5MB
+        // We set a safe limit of 4MB to account for headers and other fields
+        if (totalSize > 4 * 1024 * 1024) {
+            clearInterval(interval);
+            loadingOverlay.classList.add('hidden');
+            alert(`上传的图片总大小 (${(totalSize / 1024 / 1024).toFixed(2)}MB) 超过了限制 (4MB)。请减少图片数量或重试（系统会自动进行更激进的压缩）。`);
+            return;
+        }
 
         // Add supplementary info
         const supplementaryInfo = document.getElementById('supplementary-info').value;
