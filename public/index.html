@@ -92,9 +92,14 @@
                     <button onclick="resetAnalysis()" class="px-4 py-2 border border-purple-200 text-purple-600 rounded-lg hover:bg-purple-50 text-sm font-medium transition-colors">
                         <i class="fa-solid fa-rotate-right mr-1"></i> 重新分析
                     </button>
-                    <button onclick="exportReport()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium shadow-md transition-colors">
-                        <i class="fa-solid fa-download mr-1"></i> 导出报告
-                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="exportReport('pdf')" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium shadow-md transition-colors">
+                            <i class="fa-solid fa-file-pdf mr-1"></i> 导出 PDF
+                        </button>
+                        <button onclick="exportReport('jpeg')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium shadow-md transition-colors">
+                            <i class="fa-solid fa-image mr-1"></i> 导出图片
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -116,10 +121,7 @@
             <!-- Tabs Navigation -->
             <div class="px-6 border-b border-gray-100 overflow-x-auto">
                 <nav class="flex gap-2" id="report-tabs">
-                    <button class="tab-btn active group" data-tab="basicInfo">
-                        <i class="fa-solid fa-id-card mr-2 group-[.active]:text-indigo-600"></i>基础信息
-                    </button>
-                    <button class="tab-btn group" data-tab="interests">
+                    <button class="tab-btn active group" data-tab="interests">
                         <i class="fa-solid fa-heart mr-2 group-[.active]:text-red-600"></i>兴趣爱好
                     </button>
                     <button class="tab-btn group" data-tab="personality">
@@ -145,13 +147,8 @@
 
             <!-- Tab Content -->
             <div class="p-6 min-h-[300px] bg-gray-50">
-                <!-- Basic Info Tab -->
-                <div id="tab-basicInfo" class="tab-content active space-y-4">
-                    <!-- Dynamic Content -->
-                </div>
-
                 <!-- Interests Tab -->
-                <div id="tab-interests" class="tab-content hidden space-y-4">
+                <div id="tab-interests" class="tab-content active space-y-4">
                     <!-- Dynamic Content -->
                 </div>
 

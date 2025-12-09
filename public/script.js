@@ -189,7 +189,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Render Tabs Content
         const config = {
-            basicInfo: { icon: 'fa-id-card', color: 'text-indigo-500', bg: 'bg-indigo-100' },
             interests: { icon: 'fa-heart', color: 'text-red-500', bg: 'bg-red-100' },
             personality: { icon: 'fa-masks-theater', color: 'text-yellow-500', bg: 'bg-yellow-100' },
             psychology: { icon: 'fa-brain', color: 'text-pink-500', bg: 'bg-pink-100' },
@@ -255,14 +254,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.exportReport = async () => {
+    window.exportReport = async (format = 'pdf') => {
         const loadingOverlay = document.getElementById('loading-overlay');
         const loadingText = document.getElementById('loading-text');
         const originalLoadingText = loadingText.innerText;
         
         try {
             // 1. Show loading
-            loadingText.innerText = "正在生成报告导出...";
+            loadingText.innerText = format === 'pdf' ? "正在生成 PDF 报告..." : "正在生成长图...";
             loadingOverlay.classList.remove('hidden');
 
             // 2. Prepare DOM: Show all tabs
@@ -307,23 +306,34 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             tabsNav.style.display = originalTabsDisplay;
 
-            // 5. Generate PDF
+            // 5. Generate Output
             const imgData = canvas.toDataURL('image/jpeg', 1.0);
-            const { jsPDF } = window.jspdf;
             
-            // Calculate dimensions
-            const imgWidth = 210; // A4 width in mm
-            const imgHeight = (canvas.height * imgWidth) / canvas.width;
-            
-            // Create PDF with custom height to fit the whole image (Long Image style PDF)
-            const pdf = new jsPDF({
-                orientation: 'p',
-                unit: 'mm',
-                format: [imgWidth, imgHeight]
-            });
+            if (format === 'pdf') {
+                const { jsPDF } = window.jspdf;
+                
+                // Calculate dimensions
+                const imgWidth = 210; // A4 width in mm
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                // Create PDF with custom height to fit the whole image (Long Image style PDF)
+                const pdf = new jsPDF({
+                    orientation: 'p',
+                    unit: 'mm',
+                    format: [imgWidth, imgHeight]
+                });
 
-            pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
-            pdf.save('朋友圈客户画像分析报告.pdf');
+                pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+                pdf.save('朋友圈客户画像分析报告.pdf');
+            } else {
+                // Export as Image
+                const link = document.createElement('a');
+                link.download = '朋友圈客户画像分析报告.jpg';
+                link.href = imgData;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
 
         } catch (error) {
             console.error('Export failed:', error);
