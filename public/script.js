@@ -255,7 +255,83 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.exportReport = () => {
-        alert("功能开发中：将生成长图或PDF供下载");
+    window.exportReport = async () => {
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+        const originalLoadingText = loadingText.innerText;
+        
+        try {
+            // 1. Show loading
+            loadingText.innerText = "正在生成报告导出...";
+            loadingOverlay.classList.remove('hidden');
+
+            // 2. Prepare DOM: Show all tabs
+            const reportSection = document.getElementById('report-section');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const tabsNav = document.getElementById('report-tabs').parentElement; // The container of tabs
+            
+            // Store original display states
+            const originalStates = [];
+            tabContents.forEach(content => {
+                originalStates.push({
+                    element: content,
+                    wasHidden: content.classList.contains('hidden')
+                });
+                // Show everything
+                content.classList.remove('hidden');
+            });
+            
+            // Hide tabs navigation for the report
+            const originalTabsDisplay = tabsNav.style.display;
+            tabsNav.style.display = 'none';
+
+            // Wait a bit for DOM to update and images to render if any
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            // 3. Capture
+            const canvas = await html2canvas(reportSection, {
+                scale: 2, // Higher quality
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff'
+            });
+
+            // 4. Restore DOM
+            tabContents.forEach((content, index) => {
+                const state = originalStates[index];
+                if (state.wasHidden) {
+                    content.classList.add('hidden');
+                } else {
+                    content.classList.remove('hidden');
+                }
+            });
+            tabsNav.style.display = originalTabsDisplay;
+
+            // 5. Generate PDF
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            const { jsPDF } = window.jspdf;
+            
+            // Calculate dimensions
+            const imgWidth = 210; // A4 width in mm
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            
+            // Create PDF with custom height to fit the whole image (Long Image style PDF)
+            const pdf = new jsPDF({
+                orientation: 'p',
+                unit: 'mm',
+                format: [imgWidth, imgHeight]
+            });
+
+            pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+            pdf.save('朋友圈客户画像分析报告.pdf');
+
+        } catch (error) {
+            console.error('Export failed:', error);
+            alert('导出失败，请重试');
+        } finally {
+            // 6. Hide loading
+            loadingText.innerText = originalLoadingText;
+            loadingOverlay.classList.add('hidden');
+        }
     };
 });
