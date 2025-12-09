@@ -21,7 +21,9 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Handle 404 for API routes
-app.use('/api/:path*', (req, res) => {
+// Note: In Express 5 + path-to-regexp v8+, wildcard syntax is strict.
+// Using a regex is the safest way to match everything under /api/
+app.use(/\/api\/.*/, (req, res) => {
     res.status(404).json({ error: 'API endpoint not found' });
 });
 
