@@ -226,7 +226,8 @@ app.post('/api/analyze', upload.array('images', 20), async (req, res) => {
         ];
 
         // Add supplementary info if available
-        if (req.body.supplementaryInfo) {
+        // Note: Check if req.body.supplementaryInfo is a string, as FormData might send it differently or as null/undefined
+        if (req.body.supplementaryInfo && typeof req.body.supplementaryInfo === 'string' && req.body.supplementaryInfo.trim() !== '') {
              content.push({ 
                 type: "text", 
                 text: `用户补充的客户背景信息：${req.body.supplementaryInfo}。请将此信息与图片内容结合进行综合分析。` 
