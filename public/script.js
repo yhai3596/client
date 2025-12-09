@@ -386,123 +386,78 @@ document.addEventListener('DOMContentLoaded', () => {
         const loadingOverlay = document.getElementById('loading-overlay');
         const loadingText = document.getElementById('loading-text');
         const originalLoadingText = loadingText.innerText;
-        
+
         try {
-            // 1. Show loading
-            loadingText.innerText = format === 'pdf' ? "正在生成 PDF 报告..." : "正在生成长图...";
+            loadingText.innerText = "正在生成 PDF 报告 (服务端渲染)...";
             loadingOverlay.classList.remove('hidden');
 
-            // 2. Prepare DOM: Show all tabs
-            const reportSection = document.getElementById('report-section');
-            const tabContents = document.querySelectorAll('.tab-content');
-            const tabsNav = document.getElementById('report-tabs').parentElement; // The container of tabs
+            // 1. Prepare HTML Content
+            const reportNode = document.getElementById('report-section');
             
-            // Store original display states
+            // Temporarily show all tabs to capture full content
+            const tabContents = document.querySelectorAll('.tab-content');
             const originalStates = [];
             tabContents.forEach(content => {
-                originalStates.push({
-                    element: content,
-                    wasHidden: content.classList.contains('hidden')
-                });
-                // Show everything
+                originalStates.push({ el: content, hidden: content.classList.contains('hidden') });
                 content.classList.remove('hidden');
             });
+
+            // Clone the node to manipulate it without affecting the UI
+            const clone = reportNode.cloneNode(true);
             
-            // Hide tabs navigation for the report
-            const originalTabsDisplay = tabsNav.style.display;
-            tabsNav.style.display = 'none';
-
-            // Wait a bit for DOM to update and images to render if any
-            await new Promise(resolve => setTimeout(resolve, 300));
-
-            // 3. Capture
-            const canvas = await html2canvas(reportSection, {
-                scale: 3, // Ultra high quality
-                useCORS: true,
-                logging: false,
-                backgroundColor: '#ffffff',
-                onclone: (clonedDoc) => {
-                    const clonedReport = clonedDoc.getElementById('report-section');
-                    
-                    // 1. Force remove all background/text opacities
-                    // Tailwind uses --tw-text-opacity, --tw-bg-opacity variables. 
-                    // We must override them or remove classes.
-                    
-                    // Force text color to solid black (removing Tailwind opacity vars)
-                    clonedReport.style.color = 'rgb(0, 0, 0)'; 
-                    
-                    // Select ALL elements
-                    const allElements = clonedReport.getElementsByTagName('*');
-                    
-                    for (let el of allElements) {
-                        const style = window.getComputedStyle(el);
-                        
-                        // Fix 1: Reset CSS Opacity property
-                        if (style.opacity !== '1') {
-                            el.style.opacity = '1';
-                        }
-                        
-                        // Fix 2: Reset Tailwind CSS Variable Opacities (Text & Background)
-                        // This is the "foggy mask" culprit
-                        el.style.setProperty('--tw-text-opacity', '1');
-                        el.style.setProperty('--tw-bg-opacity', '1');
-                        el.style.setProperty('--tw-border-opacity', '1');
-                        
-                        // Fix 3: Ensure text color is solid (if it was inherited as gray)
-                        // If the element has text content, ensure it's high contrast
-                        if (el.innerText && el.innerText.trim().length > 0 && style.color !== 'rgba(0, 0, 0, 0)') {
-                             // Optional: force darken text if it's too light
-                             // el.style.color = '#1f2937'; // gray-800
-                        }
-                    }
-                }
-            });
-
-            // 4. Restore DOM
+            // Restore original UI state immediately
             tabContents.forEach((content, index) => {
-                const state = originalStates[index];
-                if (state.wasHidden) {
-                    content.classList.add('hidden');
-                } else {
-                    content.classList.remove('hidden');
-                }
+                if (originalStates[index].hidden) content.classList.add('hidden');
             });
-            tabsNav.style.display = originalTabsDisplay;
 
-            // 5. Generate Output
-            const imgData = canvas.toDataURL('image/png');
-            
-            if (format === 'pdf') {
-                const { jsPDF } = window.jspdf;
-                
-                // Calculate dimensions
-                const imgWidth = 210; // A4 width in mm
-                const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                
-                // Create PDF with custom height to fit the whole image (Long Image style PDF)
-                const pdf = new jsPDF({
-                    orientation: 'p',
-                    unit: 'mm',
-                    format: [imgWidth, imgHeight]
-                });
+            // Wrap in a complete HTML structure with Tailwind CDN
+            const fullHtml = `
+                <!DOCTYPE html>
+                <html lang="zh-CN">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>客户画像分析报告</title>
+                    <script src="https://cdn.tailwindcss.com"></script>
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                    <style>
+                        body { font-family: sans-serif; -webkit-print-color-adjust: exact; }
+                        /* Ensure report is visible in PDF */
+                        #report-section { display: block !important; margin: 0 auto; max-width: 100%; box-shadow: none; }
+                        /* Hide buttons in PDF */
+                        button { display: none !important; }
+                    </style>
+                </head>
+                <body class="p-4 bg-white">
+                    ${clone.outerHTML}
+                </body>
+                </html>
+            `;
 
-                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-                pdf.save('朋友圈客户画像分析报告.pdf');
-            } else {
-                // Export as Image
-                const link = document.createElement('a');
-                link.download = '朋友圈客户画像分析报告.png';
-                link.href = imgData;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
+            // 2. Send to Server
+            const response = await fetch('/api/export-pdf', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ html: fullHtml })
+            });
+
+            if (!response.ok) throw new Error('PDF generation failed');
+
+            // 3. Download Blob
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "朋友圈客户画像分析报告.pdf";
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
 
         } catch (error) {
             console.error('Export failed:', error);
-            alert('导出失败，请重试');
+            alert('导出 PDF 失败，请检查网络或服务器日志');
         } finally {
-            // 6. Hide loading
             loadingText.innerText = originalLoadingText;
             loadingOverlay.classList.add('hidden');
         }
