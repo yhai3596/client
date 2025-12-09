@@ -361,7 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 3. Capture
             const canvas = await html2canvas(reportSection, {
-                scale: 2, // Higher quality
+                scale: 3, // Ultra high quality
                 useCORS: true,
                 logging: false,
                 backgroundColor: '#ffffff'
@@ -379,7 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tabsNav.style.display = originalTabsDisplay;
 
             // 5. Generate Output
-            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            const imgData = canvas.toDataURL('image/png');
             
             if (format === 'pdf') {
                 const { jsPDF } = window.jspdf;
@@ -395,12 +395,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     format: [imgWidth, imgHeight]
                 });
 
-                pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
                 pdf.save('朋友圈客户画像分析报告.pdf');
             } else {
                 // Export as Image
                 const link = document.createElement('a');
-                link.download = '朋友圈客户画像分析报告.jpg';
+                link.download = '朋友圈客户画像分析报告.png';
                 link.href = imgData;
                 document.body.appendChild(link);
                 link.click();
