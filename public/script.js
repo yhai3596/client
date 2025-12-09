@@ -364,7 +364,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 scale: 3, // Ultra high quality
                 useCORS: true,
                 logging: false,
-                backgroundColor: '#ffffff'
+                backgroundColor: '#ffffff',
+                onclone: (clonedDoc) => {
+                    // Force text color to black for export
+                    const clonedReport = clonedDoc.getElementById('report-section');
+                    clonedReport.style.color = '#000000';
+                    
+                    // Fix opacity/transparency issues
+                    const allElements = clonedReport.getElementsByTagName('*');
+                    for (let el of allElements) {
+                        const style = window.getComputedStyle(el);
+                        if (style.opacity !== '1') {
+                            el.style.opacity = '1';
+                        }
+                    }
+                }
             });
 
             // 4. Restore DOM
