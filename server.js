@@ -202,6 +202,10 @@ app.post('/api/analyze', upload.array('images', 20), async (req, res) => {
         const apiKey = process.env.ARK_API_KEY;
         const modelId = process.env.ARK_MODEL_ID;
         
+        // Debug logging (Masked)
+        if (apiKey) console.log(`API Key configured: ${apiKey.substring(0, 8)}...`);
+        else console.warn("API Key MISSING");
+        
         if (!apiKey || apiKey === 'your_ark_api_key_here' || !modelId || modelId === 'your_endpoint_id_here') {
             console.warn("⚠️  API Key or Model ID not configured. Falling back to MOCK data mode.");
             
@@ -241,16 +245,22 @@ app.post('/api/analyze', upload.array('images', 20), async (req, res) => {
 
         console.log("Calling Doubao API...");
         
+        // Ensure response_format is optional or remove it if causing 400
+        // Some models or providers might not support { type: "json_object" } perfectly
         const response = await client.chat.completions.create({
             model: process.env.ARK_MODEL_ID,
             messages: [
                 { role: "system", content: SYSTEM_PROMPT },
                 { role: "user", content: content }
             ],
-            response_format: { type: "json_object" } // Force JSON output if supported, otherwise prompt handles it
+            // response_format: { type: "json_object" } // Temporarily removed to rule out compatibility issues
         });
+        
+        // Clean the response content (remove markdown code blocks if present)
+        let rawContent = response.choices[0].message.content;
+        rawContent = rawContent.replace(/```json\n?|\n?```/g, '').trim();
 
-        const analysisResult = JSON.parse(response.choices[0].message.content);
+        const analysisResult = JSON.parse(rawContent);
         
         console.log("Analysis complete.");
 
@@ -260,8 +270,20 @@ app.post('/api/analyze', upload.array('images', 20), async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Analysis error:', error);
-        res.status(500).json({ error: '分析失败，请检查服务器日志或稍后重试。' });
+        console.error('Analysis error details:', error);
+        
+        // Return detailed error message to client
+        const errorMessage = error.message || '分析失败，未知错误';
+        
+        // Check for specific API errors
+        if (error.status === 401) {
+             return res.status(500).json({ error: 'API Key 无效或未授权，请检查环境变量配置。' });
+        }
+        if (error.status === 429) {
+             return res.status(500).json({ error: 'API 请求过于频繁 (Rate Limit)，请稍后再试。' });
+        }
+        
+        res.status(500).json({ error: `分析服务错误: ${errorMessage}` });
     }
 });
 
