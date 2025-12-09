@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Image Compression ---
-    function compressImage(file, maxWidth = 800, quality = 0.6) {
+    function compressImage(file, maxWidth = 512, quality = 0.6) {
         return new Promise((resolve) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
