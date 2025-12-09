@@ -12,6 +12,7 @@ const PORT = process.env.PORT || 3000;
 const client = new OpenAI({
     apiKey: process.env.ARK_API_KEY,
     baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
+    timeout: 60000 // Set 60s timeout for OpenAI client
 });
 
 // Middleware
