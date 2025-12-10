@@ -202,7 +202,7 @@ app.post('/api/export-pdf', async (req, res) => {
                 // Local development fallback
                 args: [],
                 executablePath: undefined, // Uses locally installed chrome
-                headless: 'new'
+                headless: true // Use new boolean 'true' for headless mode in Puppeteer v10
             };
 
         const browser = await puppeteer.launch(options);
