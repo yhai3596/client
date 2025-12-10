@@ -176,6 +176,62 @@ const MOCK_ANALYSIS_RESULT = {
     }
 };
 
+const puppeteer = require('puppeteer');
+
+// ... existing code ...
+
+// API Endpoint: Generate PDF with Puppeteer
+app.post('/api/export-pdf', async (req, res) => {
+    try {
+        const { html } = req.body;
+        if (!html) {
+            return res.status(400).json({ error: 'HTML content is required' });
+        }
+
+        // Launch Puppeteer using the bundled Chromium from the puppeteer package
+        const browser = await puppeteer.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--hide-scrollbars']
+        });
+
+        const page = await browser.newPage();
+
+        // Set the viewport to A4 size (approximate pixels at 96 DPI)
+        await page.setViewport({ width: 794, height: 1123 });
+
+        // Set content and wait for network (to load Tailwind CDN and images)
+        await page.setContent(html, { 
+            waitUntil: 'networkidle0',
+            timeout: 60000 
+        });
+
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
+            printBackground: true, // Important for Tailwind colors
+            margin: {
+                top: '20px',
+                right: '20px',
+                bottom: '20px',
+                left: '20px'
+            }
+        });
+
+        await browser.close();
+
+        res.set({
+            'Content-Type': 'application/pdf',
+            'Content-Length': pdfBuffer.length,
+            'Content-Disposition': 'attachment; filename="report.pdf"'
+        });
+        
+        res.send(pdfBuffer);
+
+    } catch (error) {
+        console.error('PDF Generation Error:', error);
+        res.status(500).json({ error: 'Failed to generate PDF' });
+    }
+});
+
 // API Endpoint: Upload and Analyze
 app.post('/api/analyze', upload.array('images', 20), async (req, res) => {
     try {
