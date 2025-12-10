@@ -176,8 +176,7 @@ const MOCK_ANALYSIS_RESULT = {
     }
 };
 
-const puppeteer = require('puppeteer-core');
-const chrome = require('chrome-aws-lambda');
+const puppeteer = require('puppeteer');
 
 // ... existing code ...
 
@@ -189,23 +188,11 @@ app.post('/api/export-pdf', async (req, res) => {
             return res.status(400).json({ error: 'HTML content is required' });
         }
 
-        // Configure Puppeteer for Vercel/AWS Lambda environment
-        const options = process.env.AWS_REGION
-            ? {
-                args: [...chrome.args, '--hide-scrollbars', '--disable-web-security'],
-                defaultViewport: chrome.defaultViewport,
-                executablePath: await chrome.executablePath,
-                headless: chrome.headless,
-                ignoreHTTPSErrors: true,
-            }
-            : {
-                // Local development fallback
-                args: [],
-                executablePath: undefined, // Uses locally installed chrome
-                headless: true // Use new boolean 'true' for headless mode in Puppeteer v10
-            };
-
-        const browser = await puppeteer.launch(options);
+        // Launch Puppeteer using the bundled Chromium from the puppeteer package
+        const browser = await puppeteer.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--hide-scrollbars']
+        });
 
         const page = await browser.newPage();
 
