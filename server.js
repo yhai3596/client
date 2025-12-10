@@ -190,13 +190,22 @@ app.post('/api/export-pdf', async (req, res) => {
         }
 
         // Configure Puppeteer for Vercel/AWS Lambda environment
-        const browser = await puppeteer.launch({
-            args: [...chrome.args, '--hide-scrollbars', '--disable-web-security'],
-            defaultViewport: chrome.defaultViewport,
-            executablePath: await chrome.executablePath,
-            headless: chrome.headless,
-            ignoreHTTPSErrors: true,
-        });
+        const options = process.env.AWS_REGION
+            ? {
+                args: [...chrome.args, '--hide-scrollbars', '--disable-web-security'],
+                defaultViewport: chrome.defaultViewport,
+                executablePath: await chrome.executablePath,
+                headless: chrome.headless,
+                ignoreHTTPSErrors: true,
+            }
+            : {
+                // Local development fallback
+                args: [],
+                executablePath: undefined, // Uses locally installed chrome
+                headless: 'new'
+            };
+
+        const browser = await puppeteer.launch(options);
 
         const page = await browser.newPage();
 
